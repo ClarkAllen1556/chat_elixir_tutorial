@@ -1,6 +1,19 @@
 /* This file is for your main application css. */
 @import "./phoenix.css";
 
+#chat-container {
+  display: flex;
+  justify-content: space-between;
+  height: 500px;
+}
+
+#chat-messages {
+  flex-grow: 1;
+  padding: 1rem;
+  border: 1px solid black;
+  margin: -1rem 1rem 1rem -1rem;
+}
+
 /* LiveView specific classes for your customizations */
 .phx-no-feedback.invalid-feedback,
 .phx-no-feedback .invalid-feedback {
