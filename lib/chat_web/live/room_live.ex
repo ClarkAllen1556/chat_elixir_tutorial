@@ -1,4 +1,4 @@
-# TODO stopped here https://youtu.be/fyg0FuSL5DY?t=3135
+# TODO stopped here https://youtu.be/fyg0FuSL5DY?t=4728
 
 defmodule ChatWeb.RoomLive do
   use ChatWeb, :live_view
@@ -12,7 +12,10 @@ defmodule ChatWeb.RoomLive do
 
     topic = "room:" <> room_id
     # put in @ 59:00min
-    if connected?(socket), do: ChatWeb.Endpoint.subscribe(topic)
+    if connected?(socket) do
+      ChatWeb.Endpoint.subscribe(topic)
+      ChatWeb.Presence.track(self(), topic, username, %{})
+    end
 
     {:ok,
      assign(socket,
@@ -20,13 +23,7 @@ defmodule ChatWeb.RoomLive do
        username: username,
        topic: topic,
        message: "",
-       messages: [
-         %{
-           uuid: UUID.uuid4(),
-           content: "#{username} joined!",
-           username: "system"
-         }
-       ]
+       messages: []
      ), temporary_assigns: [messages: []]}
   end
 
@@ -53,5 +50,28 @@ defmodule ChatWeb.RoomLive do
     Logger.info(received: message)
 
     {:noreply, assign(socket, messages: [message])}
+  end
+
+  @impl true
+  def handle_info(%{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, socket) do
+    Logger.info(joins: joins, leaves: leaves)
+
+    join_messages =
+      joins
+      |> Map.keys()
+      |> Enum.map(fn username ->
+        %{uuid: UUID.uuid4(), content: "#{username} joined!", username: "system"}
+      end)
+
+    leave_messages =
+      leaves
+      |> Map.keys()
+      |> Enum.map(fn username ->
+        %{uuid: UUID.uuid4(), content: "#{username} left.", username: "system"}
+      end)
+
+    Logger.info(join_messages: join_messages, leave_messages: leave_messages)
+
+    {:noreply, assign(socket, messages: join_messages ++ leave_messages)}
   end
 end
