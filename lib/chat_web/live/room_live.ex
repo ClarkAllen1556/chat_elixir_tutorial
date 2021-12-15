@@ -23,6 +23,7 @@ defmodule ChatWeb.RoomLive do
        username: username,
        topic: topic,
        message: "",
+       user_list: [],
        messages: []
      ), temporary_assigns: [messages: []]}
   end
@@ -60,18 +61,36 @@ defmodule ChatWeb.RoomLive do
       joins
       |> Map.keys()
       |> Enum.map(fn username ->
-        %{uuid: UUID.uuid4(), content: "#{username} joined!", username: "system"}
+        %{uuid: UUID.uuid4(), content: "#{username} joined!", type: :system}
       end)
 
     leave_messages =
       leaves
       |> Map.keys()
       |> Enum.map(fn username ->
-        %{uuid: UUID.uuid4(), content: "#{username} left.", username: "system"}
+        %{uuid: UUID.uuid4(), content: "#{username} left.", type: :system}
       end)
 
     Logger.info(join_messages: join_messages, leave_messages: leave_messages)
 
-    {:noreply, assign(socket, messages: join_messages ++ leave_messages)}
+    user_list =
+      ChatWeb.Presence.list(socket.assigns.topic)
+      |> Map.keys()
+
+    {:noreply, assign(socket, messages: join_messages ++ leave_messages, user_list: user_list)}
+  end
+
+  def display_message(%{type: :system, uuid: uuid, content: content}) do
+    ~E"""
+        <p id="<%= uuid %>"> <em> <%= content %> </em> </p>
+    """
+  end
+
+  def display_message(%{uuid: uuid, content: content, username: username}) do
+    ~E"""
+    <p id="<%= uuid %>">
+        <strong><%= username %></strong>: <%= content %>
+    </p>
+    """
   end
 end

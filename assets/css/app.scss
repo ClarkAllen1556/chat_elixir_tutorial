@@ -19,6 +19,13 @@
   }
 }
 
+#user-list {
+  p {
+    padding: 0;
+    margin: 0;
+  }
+}
+
 /* LiveView specific classes for your customizations */
 .phx-no-feedback.invalid-feedback,
 .phx-no-feedback .invalid-feedback {
